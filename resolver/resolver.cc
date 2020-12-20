@@ -451,7 +451,7 @@ private:
             ctx.state.enterMethodSymbol(core::Loc::none(), item.klass, core::Names::unresolvedAncestors());
         core::TypePtr resultType = uaSym.data(ctx)->resultType;
         if (!resultType) {
-            uaSym.data(ctx)->resultType = core::TupleType::build(ctx, {ancestorType});
+            uaSym.data(ctx)->resultType = core::make_type<core::TupleType>(vector<core::TypePtr>{ancestorType});
         } else if (auto tt = core::cast_type<core::TupleType>(resultType)) {
             tt->elems.push_back(ancestorType);
         } else {

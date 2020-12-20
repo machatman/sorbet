@@ -323,7 +323,7 @@ TypePtr Types::lub(const GlobalState &gs, const TypePtr &t1, const TypePtr &t2) 
                             } else if (!differ2) {
                                 result = t2;
                             } else {
-                                result = TupleType::build(gs, move(elemLubs));
+                                result = make_type<TupleType>(move(elemLubs));
                             }
                         } else {
                             result = Types::arrayOfUntyped();
@@ -363,7 +363,7 @@ TypePtr Types::lub(const GlobalState &gs, const TypePtr &t1, const TypePtr &t2) 
                             } else if (!differ2) {
                                 result = t2;
                             } else {
-                                result = make_type<ShapeType>(Types::hashOfUntyped(), h2->keys, move(valueLubs));
+                                result = make_type<ShapeType>(h2->keys, move(valueLubs));
                             }
                         } else {
                             result = Types::hashOfUntyped();
@@ -670,7 +670,7 @@ TypePtr Types::glb(const GlobalState &gs, const TypePtr &t1, const TypePtr &t2) 
                         } else if (absl::c_equal(a2.elems, elemGlbs)) {
                             result = t2;
                         } else {
-                            result = TupleType::build(gs, move(elemGlbs));
+                            result = make_type<TupleType>(move(elemGlbs));
                         }
                     } else {
                         result = Types::bottom();
@@ -714,7 +714,7 @@ TypePtr Types::glb(const GlobalState &gs, const TypePtr &t1, const TypePtr &t2) 
                         } else if (canReuseT2) {
                             result = t2;
                         } else {
-                            result = make_type<ShapeType>(Types::hashOfUntyped(), h2.keys, move(valueLubs));
+                            result = make_type<ShapeType>(h2.keys, move(valueLubs));
                         }
                     } else {
                         result = Types::bottom();

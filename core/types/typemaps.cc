@@ -125,7 +125,7 @@ TypePtr TupleType::_instantiate(const GlobalState &gs, const InlinedVector<Symbo
     if (!newElems) {
         return nullptr;
     }
-    return TupleType::build(gs, move(*newElems));
+    return make_type<TupleType>(move(*newElems));
 }
 
 TypePtr TupleType::_instantiate(const GlobalState &gs, const TypeConstraint &tc) const {
@@ -133,7 +133,7 @@ TypePtr TupleType::_instantiate(const GlobalState &gs, const TypeConstraint &tc)
     if (!newElems) {
         return nullptr;
     }
-    return TupleType::build(gs, move(*newElems));
+    return make_type<TupleType>(move(*newElems));
 }
 
 TypePtr TupleType::_approximate(const GlobalState &gs, const TypeConstraint &tc) const {
@@ -141,7 +141,7 @@ TypePtr TupleType::_approximate(const GlobalState &gs, const TypeConstraint &tc)
     if (!newElems) {
         return nullptr;
     }
-    return TupleType::build(gs, move(*newElems));
+    return make_type<TupleType>(move(*newElems));
 };
 
 TypePtr ShapeType::_instantiate(const GlobalState &gs, const InlinedVector<SymbolRef, 4> &params,
@@ -150,7 +150,7 @@ TypePtr ShapeType::_instantiate(const GlobalState &gs, const InlinedVector<Symbo
     if (!newValues) {
         return nullptr;
     }
-    return make_type<ShapeType>(Types::hashOfUntyped(), this->keys, move(*newValues));
+    return make_type<ShapeType>(this->keys, move(*newValues));
 }
 
 TypePtr ShapeType::_instantiate(const GlobalState &gs, const TypeConstraint &tc) const {
@@ -158,7 +158,7 @@ TypePtr ShapeType::_instantiate(const GlobalState &gs, const TypeConstraint &tc)
     if (!newValues) {
         return nullptr;
     }
-    return make_type<ShapeType>(Types::hashOfUntyped(), this->keys, move(*newValues));
+    return make_type<ShapeType>(this->keys, move(*newValues));
 }
 
 TypePtr ShapeType::_approximate(const GlobalState &gs, const TypeConstraint &tc) const {
@@ -166,7 +166,7 @@ TypePtr ShapeType::_approximate(const GlobalState &gs, const TypeConstraint &tc)
     if (!newValues) {
         return nullptr;
     }
-    return make_type<ShapeType>(Types::hashOfUntyped(), this->keys, move(*newValues));
+    return make_type<ShapeType>(this->keys, move(*newValues));
 }
 
 TypePtr OrType::_instantiate(const GlobalState &gs, const InlinedVector<SymbolRef, 4> &params,

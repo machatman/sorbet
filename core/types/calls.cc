@@ -407,14 +407,14 @@ TypePtr unwrapType(const GlobalState &gs, Loc loc, const TypePtr &tp) {
         for (auto &value : shapeType->values) {
             unwrappedValues.emplace_back(unwrapType(gs, loc, value));
         }
-        return make_type<ShapeType>(Types::hashOfUntyped(), shapeType->keys, move(unwrappedValues));
+        return make_type<ShapeType>(shapeType->keys, move(unwrappedValues));
     } else if (auto *tupleType = cast_type<TupleType>(tp)) {
         vector<TypePtr> unwrappedElems;
         unwrappedElems.reserve(tupleType->elems.size());
         for (auto &elem : tupleType->elems) {
             unwrappedElems.emplace_back(unwrapType(gs, loc, elem));
         }
-        return TupleType::build(gs, move(unwrappedElems));
+        return make_type<TupleType>(move(unwrappedElems));
     } else if (isa_type<LiteralType>(tp)) {
         if (auto e = gs.beginError(loc, errors::Infer::BareTypeUsage)) {
             e.setHeader("Unsupported usage of literal type");
@@ -784,7 +784,7 @@ DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &arg
                 if (auto *hash = cast_type<ShapeType>(kwSplatType)) {
                     absl::c_copy(hash->keys, back_inserter(keys));
                     absl::c_copy(hash->values, back_inserter(values));
-                    kwargs = make_type<ShapeType>(Types::hashOfUntyped(), move(keys), move(values));
+                    kwargs = make_type<ShapeType>(move(keys), move(values));
                     --aend;
                 } else {
                     if (kwSplatType.isUntyped()) {
@@ -817,7 +817,7 @@ DispatchResult dispatchCallSymbol(const GlobalState &gs, const DispatchArgs &arg
                 --aend;
             }
         } else {
-            kwargs = make_type<ShapeType>(Types::hashOfUntyped(), move(keys), move(values));
+            kwargs = make_type<ShapeType>(move(keys), move(values));
         }
 
         // Detect the case where not all positional arguments were supplied, causing the keyword args to be consumed as
@@ -1126,7 +1126,7 @@ TypePtr getMethodArguments(const GlobalState &gs, SymbolRef klass, NameRef name,
         }
         args.emplace_back(Types::resultTypeAsSeenFrom(gs, arg.type, data->owner, klass, targs));
     }
-    return TupleType::build(gs, move(args));
+    return make_type<TupleType>(move(args));
 }
 
 TypePtr ClassType::getCallArguments(const GlobalState &gs, NameRef name) const {
@@ -1488,7 +1488,7 @@ public:
                 ++it;
             } else if (attachedClass == Symbols::Hash() && i == 2) {
                 auto tupleArgs = targs;
-                targs.emplace_back(TupleType::build(gs, tupleArgs));
+                targs.emplace_back(make_type<TupleType>(move(tupleArgs)));
             } else {
                 targs.emplace_back(Types::untypedUntracked());
             }
@@ -1543,7 +1543,7 @@ public:
             keys.emplace_back(args.args[i]->type);
             values.emplace_back(args.args[i + 1]->type);
         }
-        res.returnType = make_type<ShapeType>(Types::hashOfUntyped(), move(keys), move(values));
+        res.returnType = make_type<ShapeType>(move(keys), move(values));
     }
 } Magic_buildHashOrKeywordArgs;
 
@@ -1567,7 +1567,7 @@ public:
             }
         }
 
-        auto tuple = TupleType::build(gs, move(elems));
+        auto tuple = make_type<TupleType>(move(elems));
         if (isType) {
             tuple = make_type<MetaType>(move(tuple));
         }
@@ -1623,7 +1623,7 @@ class Magic_expandSplat : public IntrinsicMethod {
             types.resize(expandTo, Types::nilClass());
         }
 
-        return TupleType::build(gs, move(types));
+        return make_type<TupleType>(move(types));
     }
 
 public:
@@ -2301,7 +2301,7 @@ public:
                 return;
             }
         }
-        res.returnType = TupleType::build(gs, std::move(elems));
+        res.returnType = make_type<TupleType>(move(std::move(elems)));
     }
 } Tuple_concat;
 
@@ -2363,7 +2363,7 @@ public:
             }
         }
 
-        res.returnType = make_type<ShapeType>(Types::hashOfUntyped(), std::move(keys), std::move(values));
+        res.returnType = make_type<ShapeType>(std::move(keys), std::move(values));
     }
 } Shape_merge;
 
@@ -2494,7 +2494,7 @@ public:
             }
         }
 
-        res.returnType = Types::arrayOf(gs, TupleType::build(gs, move(unwrappedElems)));
+        res.returnType = Types::arrayOf(gs, make_type<TupleType>(move(unwrappedElems)));
     }
 } Array_product;
 
