@@ -49,11 +49,11 @@ string UnresolvedAppliedType::show(const GlobalState &gs) const {
 }
 
 string LiteralType::toStringWithTabs(const GlobalState &gs, int tabs) const {
-    return fmt::format("{}({})", this->underlying().toStringWithTabs(gs, tabs), showValue(gs));
+    return fmt::format("{}({})", this->underlying(gs).toStringWithTabs(gs, tabs), showValue(gs));
 }
 
 string LiteralType::show(const GlobalState &gs) const {
-    return fmt::format("{}({})", this->underlying().show(gs), showValue(gs));
+    return fmt::format("{}({})", this->underlying(gs).show(gs), showValue(gs));
 }
 
 string LiteralType::showValue(const GlobalState &gs) const {
@@ -128,7 +128,7 @@ string ShapeType::show(const GlobalState &gs) const {
         } else {
             fmt::format_to(buf, ", ");
         }
-        SymbolRef undSymbol = cast_type_nonnull<ClassType>(cast_type_nonnull<LiteralType>(key).underlying()).symbol;
+        SymbolRef undSymbol = cast_type_nonnull<ClassType>(cast_type_nonnull<LiteralType>(key).underlying(gs)).symbol;
         if (undSymbol == Symbols::Symbol()) {
             fmt::format_to(buf, "{}: {}", cast_type_nonnull<LiteralType>(key).asName(gs).show(gs),
                            (*valueIterator).show(gs));
