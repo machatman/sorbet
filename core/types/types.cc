@@ -422,17 +422,30 @@ ShapeType::ShapeType(vector<TypePtr> keys, vector<TypePtr> values) : keys(move(k
     categoryCounterInc("types.allocated", "shapetype");
 }
 
+// TODO(jez) memoize?
 TypePtr ShapeType::underlying(const GlobalState &gs) const {
-    auto keysLub = lubAllDropLiteral(gs, this->keys);
-    auto valuesLub = lubAllDropLiteral(gs, this->values);
-    vector<TypePtr> tupleArgs{keysLub, valuesLub};
-    vector<TypePtr> targs{keysLub, valuesLub, make_type<TupleType>(move(tupleArgs))};
-    return make_type<AppliedType>(Symbols::Hash(), targs);
+    if (this->keys.empty()) {
+        // We could imagine one day making this an error in `typed: strict`, and requiring type
+        // annotations on empty literal hashes.
+        return Types::hashOfUntyped();
+    } else {
+        auto keysLub = lubAllDropLiteral(gs, this->keys);
+        auto valuesLub = lubAllDropLiteral(gs, this->values);
+        vector<TypePtr> tupleArgs{keysLub, valuesLub};
+        vector<TypePtr> targs{keysLub, valuesLub, make_type<TupleType>(move(tupleArgs))};
+        return make_type<AppliedType>(Symbols::Hash(), targs);
+    }
 }
 
+// TODO(jez) memoize?
 TypePtr TupleType::underlying(const GlobalState &gs) const {
-    // TODO(jez) memoize?
-    return Types::arrayOf(gs, lubAllDropLiteral(gs, this->elems));
+    if (this->elems.empty()) {
+        // We could imagine one day making this an error in `typed: strict`, and requiring type
+        // annotations on empty literal arrays.
+        return Types::arrayOfUntyped();
+    } else {
+        return Types::arrayOf(gs, lubAllDropLiteral(gs, this->elems));
+    }
 }
 
 void ShapeType::_sanityCheck(const GlobalState &gs) const {
