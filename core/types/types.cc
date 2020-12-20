@@ -276,14 +276,6 @@ TypePtr Types::dropLiteral(const GlobalState &gs, const TypePtr &tp) {
     return tp;
 }
 
-TypePtr Types::lubAll(const GlobalState &gs, vector<TypePtr> &elements) {
-    TypePtr acc = Types::bottom();
-    for (auto &el : elements) {
-        acc = Types::lub(gs, acc, el);
-    }
-    return acc;
-}
-
 TypePtr Types::arrayOf(const GlobalState &gs, const TypePtr &elem) {
     vector<TypePtr> targs{move(elem)};
     return make_type<AppliedType>(Symbols::Array(), move(targs));
@@ -323,6 +315,15 @@ void sanityCheckProxyType(const GlobalState &gs, TypePtr underlying) {
     ENFORCE(isa_type<ClassType>(underlying) || isa_type<AppliedType>(underlying));
     underlying.sanityCheck(gs);
 }
+
+TypePtr lubAllDropLiteral(const GlobalState &gs, const vector<TypePtr> &elements) {
+    TypePtr acc = Types::bottom();
+    for (auto &el : elements) {
+        acc = Types::lub(gs, acc, Types::dropLiteral(gs, el));
+    }
+    return acc;
+}
+
 } // namespace
 
 LiteralType::LiteralType(int64_t val) : value(val), literalKind(LiteralTypeKind::Integer) {
@@ -420,12 +421,17 @@ ShapeType::ShapeType(vector<TypePtr> keys, vector<TypePtr> values) : keys(move(k
     categoryCounterInc("types.allocated", "shapetype");
 }
 
-TypePtr ShapeType::underlying() const {
-    return this->underlying_;
+TypePtr ShapeType::underlying(const GlobalState &gs) const {
+    auto keysLub = lubAllDropLiteral(gs, this->keys);
+    auto valuesLub = lubAllDropLiteral(gs, this->values);
+    vector<TypePtr> tupleArgs{keysLub, valuesLub};
+    vector<TypePtr> targs{keysLub, valuesLub, make_type<TupleType>(move(tupleArgs))};
+    return make_type<AppliedType>(Symbols::Hash(), targs);
 }
 
-TypePtr TupleType::underlying() const {
-    return this->underlying_;
+TypePtr TupleType::underlying(const GlobalState &gs) const {
+    // TODO(jez) memoize?
+    return Types::arrayOf(gs, lubAllDropLiteral(gs, this->elems));
 }
 
 void ShapeType::_sanityCheck(const GlobalState &gs) const {
