@@ -663,7 +663,7 @@ public:
     TypePtr underlying(const GlobalState &gs) const;
     bool derivesFrom(const GlobalState &gs, core::ClassOrModuleRef klass) const;
 };
-CheckSize(ShapeType, 64, 8);
+CheckSize(ShapeType, 48, 8);
 
 TYPE(TupleType) final {
 private:
@@ -689,7 +689,7 @@ public:
     TypePtr underlying(const GlobalState &gs) const;
     bool derivesFrom(const GlobalState &gs, core::ClassOrModuleRef klass) const;
 };
-CheckSize(TupleType, 40, 8);
+CheckSize(TupleType, 24, 8);
 
 TYPE(AppliedType) final {
 public:
